@@ -1,0 +1,279 @@
+--library IEEE;
+--use IEEE.std_logic_1164.all;
+--
+--entity KeyDecode_tb is
+--end KeyDecode_tb;
+--
+--architecture structural of KeyDecode_tb is
+--
+--component KeyDecode is
+-- port(
+--	
+--   --Input port
+--		  
+--	--Tdelay : in std_logic(1 downto 0);  
+--   CLK, Kack, Reset : in std_logic;
+--	L : in std_logic_vector (3 downto 0);
+--            
+--   --Output port
+--		  
+--   Kval : out std_logic;
+--   K, C : out std_logic_vector (3 downto 0));
+--
+--  end  component;
+--  
+--  
+--  constant MCLK_PERIOD : time := 20 ns;
+--  constant MCLK_HALF_PERIOD : time := MCLK_PERIOD / 2;
+--  
+--  signal CLK_tb : std_logic;
+--  signal Kack_tb : std_logic;
+--  signal Reset_tb : std_logic;
+--  signal L_tb : std_logic_vector(3 downto 0);
+--  signal Kval_tb : std_logic;
+--  signal K_tb : std_logic_vector(3 downto 0);
+--  signal C_tb : std_logic_vector(3 downto 0);
+--  
+--
+--begin 
+--  UUT: KeyDecode 
+--     port map ( 
+--	  CLK => CLK_tb,
+--	  Kack => Kack_tb,  
+--	  Reset => Reset_tb, 
+--	  L => L_tb,
+--	  Kval => Kval_tb,
+--	  K => K_tb, 
+--	  C => C_tb);
+--
+--
+--clk_gen : process
+--begin
+--        CLK_tb <= '0';
+--        wait for MCLK_HALF_PERIOD;
+--        CLK_tb <= '1';
+--        wait for MCLK_HALF_PERIOD;
+--end process;
+--  
+--
+--stimulus: process
+--begin 
+--
+----Inicializar
+--   Reset_tb  <= '1';
+--	Kack_tb  <= '0';
+--	L_tb  <= "1111";
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb  <= '0';
+--	L_tb  <= "1110";
+--	wait for MCLK_PERIOD*1;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--	
+----Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--	L_tb  <= "1101";
+--	wait for MCLK_PERIOD*2;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--	
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--	L_tb  <= "1011";
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--	
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0111";
+--	wait for MCLK_PERIOD*4;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--	
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "1100";
+--	wait for MCLK_PERIOD*;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;	
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "1001";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;		
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0011";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0110";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0101";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "1010";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "1000";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0001";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0100";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0010";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;
+--
+--	--Reset	
+--	Reset_tb  <= '1';
+--	wait for MCLK_PERIOD;
+--	
+--	Reset_tb <= '0';
+--   L_tb  <= "0000";
+--	wait for MCLK_PERIOD*16;
+--	
+--	Kack_tb  <= '1';
+--	wait for MCLK_PERIOD*3;
+--	
+--	Kack_tb  <= '0';
+--	wait for MCLK_PERIOD*3;	
+
+
+	 
+  wait;
+end process;
+
+end  architecture;
