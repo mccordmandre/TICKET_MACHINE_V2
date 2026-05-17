@@ -26,11 +26,12 @@ object KBD {
 
     private fun getKeyParallel() : Char{
         var character = NONE.toChar()
-        // enquanto kval lê o indice se for i != 0
+        // enquanto kval = 1 lê o indice se for i != 0
         if (HAL.isBit(kvalmask)) {
             val indice = HAL.readBits(keymask)
             character = teclado[indice]
             HAL.setBits(kackmask)
+            // enquanto kval = true, ou seja até keydecode receber kack bloqueia
             while (HAL.isBit(kvalmask)) {
             }
             HAL.clrBits(kackmask)
