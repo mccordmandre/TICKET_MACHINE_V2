@@ -64,7 +64,7 @@ object KBD {
 
 
 
-
+    // Retorna de imediato a tecla premida ou NONE se nao ha tecla premida
     fun getKey(): Char {
         if (serial != true){
             return getKeyParallel()
