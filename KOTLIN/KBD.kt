@@ -1,18 +1,16 @@
 import isel.leic.utils.*
 
-val TXCLKMASK: Int = 0x01
-val RXDMASK: Int = 0x02
-
-const val serial = true
-
 // Ler teclas. Funcoes retornam '0'..'9','A'..'D','#','*' ou NONE.
 object KBD {
-    const val NONE = 0;
-
+    const val NONE = 0
+    const val serial = true
+    //para parallel
     const val keymask = 0x0F
     const val kackmask = 0x80
     const val kvalmask = 0x10
-
+    //para serial
+    const val TXCLKMASK: Int = 0x01
+    const val RXDMASK: Int = 0x02
 
     val teclado = charArrayOf(
         '1', '4', '7', '*',
@@ -25,8 +23,6 @@ object KBD {
     fun init() {
         keymask
     }
-
-
 
     private fun getKeyParallel() : Char{
         var character = NONE.toChar()
