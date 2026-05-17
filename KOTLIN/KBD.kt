@@ -1,6 +1,11 @@
-// Ler teclas. Funcoes retornam '0'..'9','A'..'D','#','*' ou NONE.
 import isel.leic.utils.*
 
+val TXCLKMASK: Int = 0x01
+val RXDMASK: Int = 0x02
+
+const val serial = true
+
+// Ler teclas. Funcoes retornam '0'..'9','A'..'D','#','*' ou NONE.
 object KBD {
     const val NONE = 0;
 
@@ -18,12 +23,12 @@ object KBD {
 
     // Inicia a classe
     fun init() {
-        HAL.clrBits(kackmask)
+        keymask
     }
 
 
-    // Retorna de imediato a tecla premida ou NONE se nao ha tecla premida.
-    fun getKey(): Char {
+
+    private fun getKeyParallel() : Char{
         var character = NONE.toChar()
         // enquanto kval lê o indice se for i != 0
         if (HAL.isBit(kvalmask)) {
@@ -35,6 +40,39 @@ object KBD {
             HAL.clrBits(kackmask)
         }
         return character
+    }
+
+
+    private fun getKeySerial(): Char {
+        var character = NONE.toChar()
+        var bits = 0
+        // TXD desceu há dados para ler
+        if (!HAL.isBit(RXDMASK)) {
+            for (i in 0 until 7) {
+                HAL.setBits(TXCLKMASK)
+                if (i in 1..4) {
+                    if (HAL.isBit(RXDMASK)) {
+                        bits = bits or (1 shl (i - 1))
+                    }
+                }
+                HAL.clrBits(TXCLKMASK)
+            }
+            character = teclado[bits]
+        }
+        return character
+    }
+
+
+
+
+    fun getKey(): Char {
+        if (serial != true){
+            return getKeyParallel()
+
+        }
+        else {
+            return getKeySerial()
+        }
     }
 
 
@@ -51,6 +89,8 @@ object KBD {
         return NONE.toChar()
     }
 }
+
+
 
 
 
