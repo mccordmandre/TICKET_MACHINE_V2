@@ -62,34 +62,3 @@ object HAL {
     }
 
 
-
-/*
-
-object HAL {
-
-    // Inicia o objeto
-    fun init () {
-        //aqui vamos ter uma var que é um last que guarda o último output para construirmos sobre ele
-
-    }
-
-    val value = UsbPort.read()
-
-    // Retorna 'true' se o bit definido pela mask esta com o valor logico '1' no UsbPort
-    fun isBit(mask: Int) : Boolean = mask == 1 && value == 1
-
-    fun readBits(mask: Int) = UsbPort.read() and mask
-
-    fun setBits(mask: Int) = value or mask
-    // não chama
-
-    fun clrBits(mask: Int) = value and mask.inv()
-
-    fun writeBits(mask: Int, value: Int) {
-        UsbPort.write( (clrBits(mask)) or (value and mask) )
-
-    }
-}
-*/
-
-
