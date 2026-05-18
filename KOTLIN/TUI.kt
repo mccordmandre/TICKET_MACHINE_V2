@@ -12,7 +12,8 @@ object TUI {
 
         LCD.cursor(LCD.LINES, 0)
         LCD.write(text.padEnd(LCD.COLS))
-    }
+    } 
+    // ola
 
     // Limpa o ecrã
     fun clear() {
