@@ -1,17 +1,17 @@
 object TUI {
 
     fun init() {
+        // Inicializa todos os modulos usados pela interface com o utilizador.
         HAL.init()
         SerialEmitter.init()
         LCD.init()
         KBD.init()
+        TicketDispenser.init()
     }
 
-    // Escreve uma mensagem no LCD (linha 0 e linha 1)
-    fun writeLine( text: String) {
-
-        LCD.cursor(LCD.LINES, 0)
-        LCD.write(text.padEnd(LCD.COLS))
+ fun writeInCursor(line : Int , column : Int, sentence : String ) {
+        LCD.cursor(line, column)
+        LCD.write(sentence)
     }
 
     // Limpa o ecrã
@@ -20,8 +20,9 @@ object TUI {
     }
 
     // Lê uma tecla com timeout (5 segundos por defeito conforme o enunciado)
-    fun readKey(timeout: Long = 5000): Char {
-        return KBD.waitKey(timeout)
+    fun readKey(): Char {
+        // Aguarda ate ao limite definido pelo timeout.
+        return KBD.waitKey(5000)
     }
 
     // Lê uma tecla sem esperar
