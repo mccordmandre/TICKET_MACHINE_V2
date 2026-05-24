@@ -1,7 +1,3 @@
-val stations = listOf("Lisboa", "Madrid" , "Paris", "London", "Roma", "Berlin",
-    "Moskva", "Bruxelles", "Amsterdam", "Kyiv", "Athina", "Wien", "Warszawa",
-    "Kobenhavn","Stockholm", "Constantinople")
-
 
 object APP {
     fun init() {
@@ -11,53 +7,116 @@ object APP {
         KBD.init()
         TicketDispenser.init()
     }
-
-    // Escreve uma mensagem no LCD (linha 0 e linha 1)
-    fun writeCountryT(country: String, idx: Char, price: String) {
-        TUI.writeInCursor(0 ,5,country)
-        TUI.writeInCursor(1 ,0,idx.toString())
-        TUI.writeInCursor(1 ,11,price)
+    enum class Station(val stationName: String, val price: Int) {
+        LISBOA("Lisboa", 225),
+        MADRID("Madrid", 200),
+        PARIS("Paris", 175),
+        LONDON("London", 150),
+        ROMA("Roma", 125),
+        BERLIN("Berlin", 100),
+        MOSKVA("Moskva", 0),
+        BRUXELLES("Bruxelles", 100),
+        AMSTERDAM("Amsterdam", 125),
+        KYIV("Kyiv", 150),
+        ATHINA("Athina", 175),
+        WIEN("Wien", 200),
+        WARSZAWA("Warszawa", 225),
+        KOBENHAVN("Kobenhavn", 250),
+        STOCKHOLM("Stockholm", 275),
+        CONSTANTINOPLE("Constantinople", 300);
     }
+var countS =0
+
+    // ver se não faz mais sentido isto estar na no ticket dispenser e não na app
+    class ticket (val roundTrip: Boolean, val origin: Int, val destination: Int) {
+
+    }
+
+    fun printTicket(ticket: ticket){
+        TODO()
+       // TicketDispenser.activatePrintingTicket()
+    }
+
+
+    fun showStation(idx: Int) {
+        val station = Station.entries[idx]
+        TUI.clear()
+        TUI.writeCentered(0, station.stationName)
+        TUI.writeSides(1,idx.toString(), station.price.toString() )
+    }
+
+// para chamar fora if TUI.readKey() == '0' && countS == 0 - chama isto
 
     fun idleDisplay(){
-        if (TUI.readKey() == '0'){ // nenhuma decla carregada mas o get.key ta sempre a ser usada
-            TUI.writeInCursor(0 ,1," TICKET TO RIDE")
-            TUI.writeInCursor(1 ,0,1023.toString())
-            TUI.writeInCursor(1 ,11,1030.toString())
+            TUI.clear()// nenhuma tecla carregada mas o get.key ta sempre a ser usada
+            TUI.writeCentered(0,"TICKET TO RIDE")
+            TUI.writeSides(1,1254.toString(), 123.toString()) // descobrir como colocar data e hora
+            countS = 0
+
+    }
+
+    fun browseStations() {
+        var idx = 0
+        while (true) {
+            val key = TUI.readKey()
+            if (key == KBD.NONE.toChar() ) return idleDisplay()
+
+            when (key) {
+                in '1'..'9' -> {
+                    if (idx== 0 && countS==0) {
+                        showStation(idx)
+                        countS++
+                    } else {
+                        val digit = key - '0'
+                        idx = if (idx == digit) {
+                            val next = digit + 9
+                            if (next < Station.entries.size) next else digit // se nao existe fica no atual
+                        } else digit
+                        showStation(idx)
+                    }
+                }
+                'A' -> { idx = (idx - 1 + Station.entries.size) % Station.entries.size; showStation(idx) }
+                'B' -> { idx = (idx + 1) % Station.entries.size; showStation(idx) }
+                '#' -> purchase(idx)
+            }
         }
     }
 
-    // a primeira tecla ira ser sempre lisboa
-/*
-    fun isLISBON(){
-        if ()
+    fun purchase(idx: Int) {
+        TODO()
+    }
 
-    }
-*/
-    // se clicamso no #, inicia o processo de compra onde seleciona a ida e volta e se ele receber moedas diminui no cursos
-   /* fun compra(){
-        if (TUI.readKey() == '#'){
-        }
-    }
-    // se antes de colocr o dinheiro ou seja depois de dar o colectt, se primir em # cancela e diz "vending aborted , return ( o dinheiro que esta no mialheiro )
-// depois de colocar todo o dinheiro, passa para processing e colectar o ticket
-    */
+
 }
 
 
 fun main() {
-
     APP.init()
-
-    when (TUI.getKey()) {
-        '1' -> APP.writeCountryT(stations[1], TUI.getKey(),"2.00€")
-        '2' -> APP.writeCountryT(stations[2], TUI.getKey(),"2.00€")
-        '3' -> APP.writeCountryT(stations[3], TUI.getKey(),"2.00€")
-
-
+    while (true) {
+        APP.idleDisplay()
+        APP.browseStations()
     }
-    LCD.clear()
-
-
-
 }
+
+
+
+
+
+
+
+
+
+
+
+/*
+object app{
+    // funcao geral de ler coins
+    fun coinTotal(precoBilhete: Int): Int {
+        var total = 0
+        while (total < precoBilhete){
+            total += CoinAcceptor.coinAccept()
+        }
+        return total
+    }
+}
+*/
