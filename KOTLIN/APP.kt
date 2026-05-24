@@ -1,4 +1,4 @@
-
+import isel.leic.utils.Time
 object APP {
     fun init() {
         HAL.init()
@@ -52,7 +52,6 @@ var countS =0
             TUI.clear()// nenhuma tecla carregada mas o get.key ta sempre a ser usada
             TUI.writemenuHome("TICKET TO RIDE",1234.toString(),567.toString())
             countS = 0
-
     }
 
     fun browseStations() {
@@ -82,42 +81,41 @@ var countS =0
         }
     }
 
+    fun vendingAborted(remaining : Int) {
+        CoinAcceptor.eject()
+        TUI.clear()
+        TUI.writeCentered(0, "Vending Aborted")
+        TUI.writeCentered(1, "returned  ${formatPrice(remaining)}$EURO")
+        Time.sleep(5000)
+    }
+
     fun formatPrice(cents: Int): String {
         return "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
     }
     fun purchase(idx: Int) {
         val station = Station.entries[idx]
-        var roundTrip = false  //
-        var inserted=0// começa em ida
+        var roundTrip = false
+        var inserted = 0
 
         while (true) {
             val price = if (roundTrip) station.price * 2 else station.price
-            val remaining = price - inserted
             val tipo = if (roundTrip) "$ARROW_UP$ARROW_DOWN" else "$ARROW_UP"
+            val remaining = price - inserted
+
 
             TUI.clear()
             TUI.writemenuHome(station.stationName, tipo, "${formatPrice(price)}$EURO")
 
-            if (CoinAcceptor.checkCoin()) {
-                inserted += CoinAcceptor.readCoin()
-                CoinAcceptor.coinAccept()
-            }
-            
-            if (inserted >= price) {
-                processTicket(idx, roundTrip)
-                return
-            }
+
             val key = TUI.readKey()
             when (key) {
                 '*' -> roundTrip = !roundTrip
-                '#' -> { TUI.clear()
-                    TUI.writeCentered(0, "Vending Aborted")
+                '#' -> { vendingAborted(price)
+                     return idleDisplay() }
                 }
-                KBD.NONE.toChar() -> return
-            }
+
         }
     }
-
 
 }
 
