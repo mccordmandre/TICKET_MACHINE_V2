@@ -9,7 +9,7 @@ object TUI {
         TicketDispenser.init()
     }
 
- fun writeInCursor(line : Int , column : Int, sentence : String ) {
+    fun writeInCursor(line : Int , column : Int, sentence : String ) {
         LCD.cursor(line, column)
         LCD.write(sentence)
     }
@@ -17,6 +17,22 @@ object TUI {
     // Limpa o ecrã
     fun clear() {
         LCD.clear()
+    }
+
+    //tipo (0, "Porto")
+    fun writeCentered(line: Int, text: String){
+        writeInCursor(line,(LCD.COLS - text.count()) / 2, text)
+    }
+
+    fun writeSides(line: Int ,textL: String, textR:String){
+        writeInCursor(line,0, textL)
+        writeInCursor(line,(LCD.COLS - textR.count()) , textR)
+    }
+
+    fun writemenuHome(apptipe: String,left: String, right : String){
+        writeCentered(0, apptipe)
+        writeSides(1,left,right)
+
     }
 
     // Lê uma tecla com timeout (5 segundos por defeito conforme o enunciado)
@@ -29,6 +45,7 @@ object TUI {
     fun getKey(): Char {
         return KBD.getKey()
     }
+
 }
 
 // TUI
@@ -36,21 +53,6 @@ fun main() {
 
     TUI.init()
 
-    Thread.sleep(500)
-    TUI.writeLine( "Hello World!")
-    Thread.sleep(1000)
-
-    TUI.writeLine("Teste TUI")
-    println("writeLine 1 - esperado: 'Teste TUI' na linha 1, resto preenchido com espacos")
-    Thread.sleep(1000)
-
-    TUI.writeLine("Texto longo demais para caber no display LCD 16 cols")
-    println("writeLine texto lonngo")
-    Thread.sleep(1000)
-
-    TUI.writeLine("")
-    println(" linha 0 preenchida com 16 espacos")
-    Thread.sleep(1000)
 
     TUI.clear()
     println(" limpo ")
