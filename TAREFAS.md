@@ -1,28 +1,5 @@
 # Ticket Machine — G7 LEIC21D
 
-## Índice
-
-- [[#Classificação Final (20 valores)]]
-    - [[#AV Média Final (6 valores)]]
-    - [[#Defesa Final (14 valores)]]
-- [[#hardware]]
-    - [[#Ticket Machine (top-level)]]
-        - [[#Keyboard Reader]]
-            - [[#Key Decode]]
-            - [[#RingBuffer]]
-            - [[#KeyTransmitter]]
-        - [[#PE LCD]]
-            - [[#Serial Receiver]]
-        - [[#PE TD (Ticket Dispenser) (AV II)|PE TD]]
-            - [[#Serial Receiver (partilhado)]]
-- [[#software]]
-- [[#Relatórios]]
-    - [[#AV]]
-    - [[#AV FINAL]]
-- [[#Prioridades (maior perda primeiro)|Prioridades]]
-
----
-
 - # Classificação Final (20 valores)
 	- # AV Média Final (6 valores)
 		12,07 (3,6/6 valores da nota final)
@@ -53,15 +30,17 @@
 		            - [x] vhdl — 100% (0,25)
 		            - [x] tb — 90% (0,25)
 		        - key scan
+					- [ ] **nova versão !!**
 		            - [x] vhdl — 100% (1,0)
 		            - [x] tb — 90% (0,9)
 		        - key control
 		            - [ ] **ASM — 40% (1,5)**
+					- [ ] **Permitir Key Repeat!!**
 		            - [x] vhdl — 100% (1,0)
 		            - [x] TB — 100% (1,0)
 		    - #### RingBuffer
-				- [x] VHDL — 95% (0,5)
-		        - [x] TB — 90% (0,25)
+			    - [x] VHDL — 95% (0,5)
+			    - [x] TB — 90% (0,25)
 		        - full / empty
 		            - [x] vhdl — 80% (0,25)
 		            - [ ] tb — 50% (0,25)
