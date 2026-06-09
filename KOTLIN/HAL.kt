@@ -1,5 +1,6 @@
-import isel.leic.UsbPort
 
+import isel.leic.UsbPort
+import isel.leic.utils.Time
 
 object HAL {
 
@@ -9,6 +10,7 @@ object HAL {
     // Inicia o objeto
     fun init() {
         clrBits(0xFF)
+        UsbPort.write(lastOutput)
     }
 
     // Retorna 'true' se o bit definido pela mask esta com o valor logico '1' no UsbPort
@@ -46,19 +48,9 @@ object HAL {
 }
 
     fun main() {
-        //
-        //HAL.writeBits(0x0F, 0x0F)
-        //HAL.clrBits(0x01)
-        //HAL.setBits(0x01)
-        //HAL.isBit(0x01)
-        val tecla = HAL.readBits(0x0F)
-        while(true) {
-            val teclaNew = HAL.readBits(0x0F)
-            while (tecla != teclaNew){
-                println(teclaNew)
-            }
-
-        }
+        HAL.init()
+        HAL.writeBits(0xFF, 0xF0) // no value acho que deviamos colocar o usbport, pq ele funciona
+        Time.sleep(10000)
+        println(HAL.readBits(0x0F))
     }
-
 
