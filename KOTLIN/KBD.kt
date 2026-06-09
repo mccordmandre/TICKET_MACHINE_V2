@@ -9,8 +9,8 @@ object KBD {
     const val kackmask = 0x80
     const val kvalmask = 0x10
     //para serial
-    const val TXCLKMASK: Int = 0x01
-    const val RXDMASK: Int = 0x02
+    const val TXCLKMASK: Int = 0x80
+    const val RXDMASK:   Int = 0x80
 
     val teclado = charArrayOf(
         '1', '4', '7', '*',
@@ -89,67 +89,13 @@ object KBD {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-    // Retorna a tecla premida, caso ocorra antes do 'timeout' (em milissegundos),
-    // ou NONE caso contrario.
-    fun waitKey(timeout: Long): Char {
-        val start = System.nanoTime()
-        while (((timeout * 10_000_000 - start) < 0) and (getKey() == NONE.toChar())){
-            return getKey()
+fun main() {
+    KBD.init()
+    println("A aguardar teclas...")
+    while (true) {
+        val key = KBD.getKey()
+        if (key != KBD.NONE.toChar()) {
+            println("Tecla: $key")
         }
-        return NONE.toChar()
-    }
-
- */
-
-
-
-
-
-
-
-
-
-/*
-
-object KBD {
-    const val NONE = 0
-    const val MASK  = 0x0f
-
-    fun init (){}
-
-    val teclado = charArrayOf(
-        '1', '2', '3', 'A',
-        '4', '5', '6', 'B',
-        '7', '8', '9', 'C',
-        '*', '0', '#', 'D')
-
-    fun getKey(): Char {
-        val rcv = HAL.readBits(MASK)
-        if (rcv == 0) return NONE.toChar()
-        return teclado[rcv]
-    }
-
-    fun waitKey(timeout: Long): Char {
-        while (Time.getTimeInMillis()  < timeout) {
-            val key = getKey()
-            if (key != NONE.toChar()) return key
-        }
-        return NONE.toChar()
     }
 }
-*/
