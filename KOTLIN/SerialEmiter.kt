@@ -1,144 +1,58 @@
-import KBD.NONE
-import KBD.getKey
-import isel.leic.utils.Time
-
-
-// Envia tramas para os diferentes modulos Serial Receiver.
-object SerialEmitter {
-    enum class Peripheral { LCD, TICKET }
-
-    const val TD_DONE = 0x01
-
-    const val RS = 0x200 // mensagem de controlo ou dados
-    const val E = 0x01
-
-    const val LCD_SEL = 0x1FE // mensagem pro lcd
-    const val TD_SEL_O = 0x1E0
-    const val TD_SEL_D = 0x01E
-    const val SDX = 0x01
-
-    const val sclkmask = 0x02
-    const val SS = 0x04
-
-
-    // Inicia a classe
-    fun init() {
-        HAL.init()
-        HAL.setBits(SS)
-    }
-
-    //Envia uma trama para o Serial Receiver identificando o periferico de destino em "addr", os bits de dados em 'data' e em 'size' o numero de bits a enviar
-    // ele pode enviar mais do que os 9 bits de data que usamos para comunicar com o PELCD
-    fun send(addr: Peripheral, data: Int) {
-
-        val newAddr = if (addr == Peripheral.LCD) RS and LCD_SEL and E
-        else RS and TD_SEL_D and TD_SEL_O and TD_DONE
-
-        val sizedata = 9
-
-        HAL.clrBits(SS)
-
-        for (n in 0 until sizedata) {
-            HAL.clrBits(sclkmask)
-            val bit = (data shr n) and 1
-            HAL.writeBits(SDX, bit)
-            HAL.setBits(sclkmask)
-        }
-        HAL.clrBits(sclkmask)
-        HAL.setBits(SS)
-
-
-    }
-    //o bit de FN tÃªm de estar a 0
-    // Retorna informação se o periferico está ocupado
-    fun isBusy(): Boolean = !HAL.isBit(TD_DONE)
-
-}
-
-
-
-
-
-
-fun main() {
-    var a = 0x101
-    while (true) {
-
-        SerialEmitter.send(SerialEmitter.Peripheral.LCD, a)
-        a += a
-        Thread.sleep(10000 )
-    }
-
-}
-
-
-// o bit de FN têm de estar a 0
-///fun isBusy(): Boolean = !HAL.isBit(TD_DONE)
-
-/*
-
-import isel.leic.utils.*
-
 // Envia tramas para os diferentes modulos Serial Receiver.
 object SerialEmitter {
 
     enum class Peripheral {LCD, TICKET}
-    // vou ter que ter um mandar um SCLK, e o SDX é
-    //dentro da class LCD vou ter que colocar as masks
-    //[,,,,,,,"inv.in/hr.clk","sr.clk","sr.in"]
-/*
-    # PE LCD
-    # Port Expander
-    UsbPort.O0 -> sr.in
-    UsbPort.O1-> sr.clk
-    UsbPort.O2-> inv.in, hr.clk
-    inv.out -> sr.en
-    sr.out[0-9] -> hr.in[0-9]
-    hr.out[1-8] -> lcd.D[0-7]
-    hr.out0 -> lcd.rs
-    hr.out9-> lcd.e
 
- */
+    // entreadas no controlo:
+    // entrea no controlo dps de sair do Ticket Dispenser como Fn e indica que acabou de imprimir ticket já podemos imprimir um novo
+    const val TDdone_MASK = 0x10
 
-    //const val serialmask
-    val lcdselmask = 0x04 //SS
-    // (LDCsel -> enable  SR a 0)
-    val sclkmask = 0x02 //SCLK: UsbPort.O1-> sr.clk
-    val sdxmask = 0x01 //SDX: UsbPort.O0 -> sr.in
+    // saidas do controlo:
+    // saida para LCD exclusiva:
+    const val nLCDsel_MASK = 0x04
+    //saida para Ticked Dispenser exclusiva:
+    const val nTDsel_MASK  = 0x08
+    // saidas do controlo para ambos:
+    const val SCLK_MASK = 0x02
+    const val SDX_MASK = 0x01
 
+    // Protocolo série são sempre 10 bits para LCD e TD
+    const val SIZE_DATA = 10
 
 
     // Inicia a classe
     fun init() {
-        //provavelmente quero dar reset ao PELCD e ao PETD
-        //HAL.clrBits(serialMask)
-
-
-
+        HAL.setBits(nLCDsel_MASK or nTDsel_MASK)
     }
 
     // Envia uma trama para o SerialReceiver identificado o periferico de destino em 'addr', os bits de dados em 'data' e em 'size' o numero de bits a enviar.
-    fun send(addr: Peripheral, data: Int, size: Int) {
-            //addr escolhes se queres enviar para LCD ou para Ticket Dispenser.
-            //para isso tens o enum class Preipheral
+    fun send(addr: Peripheral, data: Int) {
 
-        var sdx = 0
-        //lcdsel = 0
+        // primeira parte do protocolo de com em sserie
+        val SEL_MASK = if (addr == Peripheral.LCD) nLCDsel_MASK else nTDsel_MASK
+        HAL.clrBits(SEL_MASK)
 
+        // enviar dados em serie
+        for (n in 0 until SIZE_DATA) {
+            HAL.clrBits(SCLK_MASK)
+            //envia pelo SDX (como SEL_MASK ja está a enviar LCD ou TD os dados chegam ao sitio certo)
+            val bit = (data shr n) and 1
+            HAL.writeBits(SDX_MASK, bit)
 
-        for (i in 0 .. 9){
-            var bitmask = 0x01
-            val bit = data and bitmask
-            HAL.writeBits(sdxmask, bit)
-            bitmask = shl i
-
+            HAL.setBits(SCLK_MASK)
         }
-
+        // ultima parte do protocolo, primeiro SCLK a 0 depois SEL a 1
+        HAL.clrBits(SCLK_MASK)
+        HAL.setBits(SEL_MASK)
     }
 
-    // Retorna informacao se o periferico esta ocupado
-    fun isBusy() : Boolean {}
+    //Retorna informação se o periferico (TD) esta ocupado
+    //Ticket Dispenser "fn == 1 quando concluida a dispensa do bilhete"
+    //isBusy() usado pelo TicketDispenser.kt!!!
+    fun isBusy(): Boolean = !HAL.isBit(TDdone_MASK)
 }
 
-
-*/
+fun main() {
+    HAL.init()
+    SerialEmitter.init()
+}
