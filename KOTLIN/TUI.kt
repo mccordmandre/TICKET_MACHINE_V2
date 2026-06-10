@@ -2,11 +2,8 @@ object TUI {
 
     fun init() {
         // Inicializa todos os modulos usados pela interface com o utilizador.
-        HAL.init()
-        SerialEmitter.init()
         LCD.init()
         KBD.init()
-        TicketDispenser.init()
     }
 
     fun writeInCursor(line : Int , column : Int, sentence : String ) {
@@ -36,9 +33,11 @@ object TUI {
     }
 
     // Lê uma tecla com timeout (5 segundos por defeito conforme o enunciado)
-    fun readKey(): Char {
+    // retorna null se timeout
+    fun readKey(timeout: Int): Char? {
         // Aguarda ate ao limite definido pelo timeout.
-        return KBD.waitKey(5000)
+        val key = KBD.waitKey(timeout.toLong())
+        return if (key == KBD.NONE.toChar()) null else key
     }
 
     // Lê uma tecla sem esperar
@@ -46,22 +45,46 @@ object TUI {
         return KBD.getKey()
     }
 
+    // seleciona item da lista com A/B para cima/baixo, # confirma
+    fun selectFromList(items: List<String>, timeout: Int): Int? {
+        if (items.isEmpty()) return null
+
+        var idx = 0
+        while (true) {
+            clear()
+            writeCentered(0, items[idx])
+            writeSides(1, "A", "B")
+
+            val key = readKey(timeout)
+            if (key == null) return null
+
+            when (key) {
+                'A' -> idx = (idx - 1 + items.size) % items.size
+                'B' -> idx = (idx + 1) % items.size
+                '#' -> return idx
+                '*' -> return null
+            }
+        }
+    }
+
+    // formata centimos para "X.XXE"
+    fun formatPrice(cents: Int): String {
+        val euros = cents / 100
+        val centimos = cents % 100
+        return String.format("%d.%02d€", euros, centimos)
+    }
+
 }
 
-// TUI
 fun main() {
-
     TUI.init()
 
+    // testa selectFromList
+    val stations = listOf("Lisboa", "Madrid", "Paris", "London")
+    val idx = TUI.selectFromList(stations, 10000)
+    println("Escolheu: $idx")
 
-    TUI.clear()
-    println(" limpo ")
-    Thread.sleep(1000)
-
-    println(" carrega uma tecla ")
-    val key = TUI.readKey()
-    println(" $key")
-    val none = TUI.getKey()
-    println(" $none")
-
+    // testa formatPrice
+    println(TUI.formatPrice(225))
+    println(TUI.formatPrice(50))
 }
