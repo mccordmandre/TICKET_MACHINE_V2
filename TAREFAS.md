@@ -35,7 +35,7 @@
 		            - [x] tb — 90% (0,9)
 		        - key control
 		            - [ ] **ASM — 40% (1,5)**
-					- [ ] **Permitir Key Repeat!!**
+					- [ ] ** TDelay/Permitir Key Repeat!!**
 		            - [x] vhdl — 100% (1,0)
 		            - [x] TB — 100% (1,0)
 		    - #### RingBuffer
