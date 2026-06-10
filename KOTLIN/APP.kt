@@ -8,6 +8,8 @@ object APP {
         TicketDispenser.init()
 
     }
+    /*
+    // no projeto se tiver no idle pode ativar M for ativo entra em fase de manutenção
     enum class Station(val stationName: String, val price: Int) {
         LISBOA("Lisboa", 225),
         MADRID("Madrid", 200),
@@ -26,38 +28,60 @@ object APP {
         STOCKHOLM("Stockholm", 275),
         CONSTANTINOPLE("Constantinople", 300);
     }
-var countS =0
-    val ARROW_UP   = "\u0000"
-    val ARROW_DOWN = "\u0001"
-    val EURO       = "\u0002"      // euro
 
+     */
+
+
+    // contadores e variavais de escrita
+   var countS =0
+    const val M = 0x06 // i6
+  val ARROW_UP   = "\u0000"
+  val ARROW_DOWN = "\u0001"
+  val EURO       = "\u0002"      // euro
+
+    
     fun processTicket(idx: Int, roundTrip: Boolean) {
-        val station = Station.entries[idx]
-        TUI.writeCentered(1, station.stationName)
-        CoinAcceptor.collect()
-        val ticket = Ticket(roundTrip, 0, idx)
-        TicketDispenser.activatePrintingTicket(ticket.roundTrip, ticket.origin, ticket.destination)
-    }
-
-
-    fun showStation(idx: Int) {
-        val station = Station.entries[idx]
         TUI.clear()
-        TUI.writemenuHome(station.stationName,"$idx$ARROW_UP$ARROW_DOWN","${formatPrice(station.price)}$EURO")
+        TUI.writeCentered(0, Stations.getName(idx))
+        TUI.writeCentered(1, "Processing...")
+
+        CoinAcceptor.collect()
+        TUI.printTicket(roundTrip, 6, idx)
+
+        TUI.clear()
+        TUI.writeCentered(0, Stations.getName(idx))
+        TUI.writeCentered(1, "Collect Ticket")
+
+        TUI.ticketcolected()  // espera clicar
+
+        TUI.writeCentered(0, "Thank you!")
+        TUI.writeCentered(1, "Have a nice trip")
+        Thread.sleep(2000)
+    }
+    fun showStation(idx: Int) {
+        TUI.clear()
+        TUI.writemenuHome(Stations.getName(idx), "$idx$ARROW_UP$ARROW_DOWN", "${formatPrice(Stations.getPrice(idx))}$EURO")
     }
 
 // para chamar fora if TUI.readKey() == '0' && countS == 0 - chama isto
 
     fun idleDisplay(){
-            TUI.clear()// nenhuma tecla carregada mas o get.key ta sempre a ser usada
-            TUI.writemenuHome("TICKET TO RIDE",1234.toString(),567.toString())
+
+        while(true) {
+            val key = TUI.getKey()
+            TUI.clear()
+            TUI.writemenuHome("TICKET TO RIDE", 1234.toString(), 567.toString())
             countS = 0
+            //if (key == M.toChar()) maintence()
+
+        }
+
     }
 
     fun browseStations() {
         var idx = 0
         while (true) {
-            val key = TUI.readKey()
+            val key = TUI.readKey(5000)
             if (key == KBD.NONE.toChar() ) return idleDisplay()
 
             when (key) {
@@ -69,13 +93,15 @@ var countS =0
                         val digit = key - '0'
                         idx = if (idx == digit) {
                             val next = digit + 9
-                            if (next < Station.entries.size) next else digit
+                            if (next < Stations.count()) next else digit
                         } else digit
                         showStation(idx)
                     }
                 }
-                'A' -> { idx = (idx - 1 + Station.entries.size) % Station.entries.size; showStation(idx) }
-                'B' -> { idx = (idx + 1) % Station.entries.size; showStation(idx) }
+                'A' -> { idx = (idx - 1 + Stations.count()) % Stations.count()
+                     showStation(idx) }
+                'B' -> { idx = (idx + 1) % Stations.count()
+                     showStation(idx) }
                 '#' -> purchase(idx)
             }
         }
@@ -93,24 +119,32 @@ var countS =0
         return "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
     }
     fun purchase(idx: Int) {
-        val station = Station.entries[idx]
         var roundTrip = false
         var inserted = 0
 
         while (true) {
-            val price = if (roundTrip) station.price * 2 else station.price
+            val price = if (roundTrip) Stations.getPrice(idx) * 2 else Stations.getPrice(idx)
             val tipo = if (roundTrip) "$ARROW_UP$ARROW_DOWN" else "$ARROW_UP"
             val remaining = price - inserted
 
+            if (CoinAcceptor.checkCoin()) {
+                val coin = CoinAcceptor.readCoin()
+                if (coin != null) inserted += coin
+                CoinAcceptor.coinAccept()
+            }
+
+            if (inserted >= price) {
+                return processTicket(idx, roundTrip)
+            }
 
             TUI.clear()
-            TUI.writemenuHome(station.stationName, tipo, "${formatPrice(price)}$EURO")
+            TUI.writemenuHome(Stations.getName(idx), tipo, "${formatPrice(remaining)}$EURO")
 
 
-            val key = TUI.readKey()
+            val key = TUI.readKey(100)
             when (key) {
                 '*' -> roundTrip = !roundTrip
-                '#' -> { vendingAborted(price)
+                '#' -> { vendingAborted(inserted)
                      return idleDisplay() }
                 }
 
@@ -120,12 +154,12 @@ var countS =0
 }
 
 
-fun main() {
+fun main(args : Array<String>) {
     APP.init()
+    Stations.init(args[1])
     while (true) {
         APP.idleDisplay()
         APP.browseStations()
-
     }
 }
 
