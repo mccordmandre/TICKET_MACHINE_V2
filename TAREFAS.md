@@ -105,12 +105,12 @@
 	- [ ] `data class Coin(value, qty)`, buffer durante compra, cofre, persistência `CoinDeposit.txt` (`VALUE;NUMBER_COINS`)
 	- [ ] tb
 - [ ] **Stations.kt**
-	- [ ] contador de bilhetes por estação, persistência (`PRICE;SOLD_TICKETS;STATION_NAME`)
+	- [x] contador de bilhetes por estação, persistência (`PRICE;SOLD_TICKETS;STATION_NAME`)
 	- [ ] tb
 - [ ] **FileAccess.kt** (leitura/escrita de ficheiros para CoinDeposit e Stations)
 	- [ ] tb
 	- [ ] criar ficheiros de dados
-		- [ ] `CoinDeposit.txt` + Stations.txt
+		- [x] `CoinDeposit.txt` + Stations.txt
 - [ ] **Modo Manutenção** (chave M, I6=0x40)
 	- [ ] Tb
 	- [ ] Funcoes
