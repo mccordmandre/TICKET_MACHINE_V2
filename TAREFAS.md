@@ -12,10 +12,10 @@
 	
 - #  hardware
 	- ## Ticket Machine (top-level)
-	    - [ ] **VHDL — 0% (1,5)**
+	    - [x] **VHDL — 0% (1,5)**
 	    - [ ] PINS — 50% (0,5)
 		- ### Keyboard Reader
-			- [ ] vhdl — 0% (0,5)
+			- [x] vhdl — 0% (0,5)
 			- [ ] tb — 0% (0,5)
 		    - #### Key Decode
 			    - [x] vhdl — 100% (0,5)
@@ -34,7 +34,7 @@
 		            - [x] vhdl — 100% (1,0)
 		            - [x] tb — 90% (0,9)
 		        - key control
-		            - [ ] **ASM — 40% (1,5)**
+		            - [x] **ASM — 40% (1,5)**
 					- [ ] **TDelay/Permitir Key Repeat!!**
 		            - [x] vhdl — 100% (1,0)
 		            - [x] TB — 100% (1,0)
