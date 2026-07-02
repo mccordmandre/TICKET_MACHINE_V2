@@ -89,50 +89,36 @@ object APP {
      */
 
     fun idleMaintenance() {
+        // lista de opções mostradas em "slideshow" no ecrã de manutenção
         val slides = listOf("# - Print Ticket", "A - Station Cnt.", "B - Coins Cnt.", "C - Reset Cnt.", "D - Shutdown")
-        var slideIdx = -1
+        var slideIdx = 0 // arranca sempre no 1º slide ("# - Print Ticket")
         var lastSlideTime = Time.getTimeInMillis()
         val SLIDE_INTERVAL = 2000
 
-        slideIdx = 0
         TUI.clear()
         TUI.writeCentered(0, "Maintenance")
-        TUI.writeLeftSide(1, slides[slideIdx])
+        TUI.writeLeftSide(1, slides[slideIdx]) // desenha o 1º slide antes de entrar no loop
+
         while(true) {
+            // só mostra o slideshow e aceita teclas enquanto estivermos em modo manutenção
+
             if (Maintenance.stilMaintenance()) {
+
+                //se passou o tempo suficiente desde a última troca? -> avança para o próximo slide
                 if (Time.getTimeInMillis() - lastSlideTime >= SLIDE_INTERVAL) {
-                    slideIdx = (slideIdx + 1) % slides.size
-                    lastSlideTime = Time.getTimeInMillis()
+                    slideIdx = (slideIdx + 1) % slides.size // avança circularmente pela lista de slides
+                    lastSlideTime = Time.getTimeInMillis() // reinicia o cronómetro
                     TUI.clear()
                     TUI.writeCentered(0, "Maintenance")
-                    TUI.writeLeftSide(1, slides[slideIdx])
+                    TUI.writeLeftSide(1, slides[slideIdx]) // redesenha o novo slide
                 }
-
                 val key = TUI.getKey()
                 when (key) {
-                    '#' -> {
-                        showStation(0); browseTest(); return
-                    }
-
-                    'A' -> {
-                        browseMaintenance(0, Stations.getName(0), Stations.getSold(0)); browseStationsM(); return
-                    }
-
-                    'B' -> {
-                        browseMaintenance(
-                            0,
-                            CoinDeposit.getCoinType(0).toString(),
-                            CoinDeposit.getAmmount(0)
-                        ); browsecoinsM(); return
-                    }
-
-                    'C' -> {
-                        resetcounters(); return
-                    }
-
-                    'D' -> {
-                        shutdown(); return
-                    }
+                    '#' -> {  showStation(0); browseTest() }
+                    'A' -> { browseMaintenance(0, Stations.getName(0), Stations.getSold(0)); browseStationsM()}
+                    'B' -> {browseMaintenance(0,CoinDeposit.getCoinType(0).toString(),CoinDeposit.getAmmount(0)); browsecoinsM() }
+                    'C' -> { resetcounters()}
+                    'D' -> { shutdown()}
                 }
             } else idleDisplay()
         }
@@ -156,12 +142,14 @@ object APP {
                 in '1'..'9' -> {
                     val digit = key!! - '0'
                     idx = if (idx == digit) {
+                        // se tiveremos a clicar pela segunda vez na tecla interpreta-se como pedido para ir para a estação que nao se enquadra do primeiros 9 idx
                         val next = digit + 9
                         if (next < Stations.count()) next else digit
                     } else digit
                     TUI.clear()
                     showStation(idx)
                 }
+                // recua 1 posição; soma Stations.count() antes do % para evitar índices negativos
                 'A' -> { idx = (idx - 1 + Stations.count()) % Stations.count()
                     TUI.clear()
                     showStation(idx) }
@@ -473,6 +461,7 @@ object APP {
      * @param remaining Valor (em cêntimos) a devolver/mostrar ao utilizador.
      * Sem retorno; efeito lateral: ejeção física de moedas + pausa 5s.
      */
+    
     fun vendingAborted(remaining: Int) {
         CoinAcceptor.eject()
         CoinDeposit.saveCoins()
