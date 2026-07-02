@@ -16,6 +16,13 @@ object APP {
     val EURO       = "\u0002"      // euro
 
     // FUNÇÕES GENERICAS DA APP
+
+
+    /**
+     * Obtém a hora atual do sistema, formatada para o menu de início.
+     * Sem parâmetros.
+     * @return String no formato "HH:mm" (ex: "09:05").
+     */
     fun getTime(): String {
         val cal = java.util.Calendar.getInstance()
         val h = cal.get(java.util.Calendar.HOUR_OF_DAY).toString().padStart(2, '0')
@@ -23,25 +30,64 @@ object APP {
         return "$h:$m"
     }
 
+    /**
+     * Obtém a data atual do sistema, formatada para o menu de início.
+     * Sem parâmetros.
+     * @return String no formato "dd/MM/yyyy".
+     */
     fun getDate(): String {
         val cal = java.util.Calendar.getInstance()
         val d = cal.get(java.util.Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
         val mo = (cal.get(java.util.Calendar.MONTH) + 1).toString().padStart(2, '0')
-        val year = (cal.get(java.util.Calendar.YEAR) ).toString().padStart(2, '0')
+        val year = (cal.get(java.util.Calendar.YEAR)).toString().padStart(2, '0')
         return "$d/$mo/$year"
     }
+
+    /**
+     * Converte um valor em cêntimos para uma string de preço legível.
+     * @param cents Valor em cêntimos (ex: 155).
+     * @return String no formato "euros.cêntimos" (ex: "1.55").
+     */
     fun formatPrice(cents: Int): String { //155 -> 1.55
         return "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
     }
+
+    /**
+     * Mostra no LCD a informação da estação no índice indicado
+     * (nome, índice + setas de navegação, preço formatado).
+     * @param idx Índice da estação a mostrar (0-based).
+     * Sem retorno; efeito lateral: escreve no LCD via TUI.
+     */
     fun showStation(idx: Int) {
         TUI.writemenuHome(Stations.getName(idx), "$idx$ARROW_UP$ARROW_DOWN", "${formatPrice(Stations.getPrice(idx))}$EURO")
     }
 
+    /**
+     * Mostra no LCD uma linha genérica de manutenção (usado tanto para
+     * listar estações vendidas como contagem de moedas).
+     * @param idx Índice do item a mostrar.
+     * @param nome Nome/etiqueta a apresentar na 1ª linha.
+     * @param sold Valor numérico associado (quantidade vendida / quantidade de moedas).
+     * Sem retorno; efeito lateral: escreve no LCD via TUI.
+     */
     fun browseMaintenance(idx: Int, nome : String, sold : Int ) {
         TUI.clear()
         TUI.writemenuHome(nome, "$idx$ARROW_UP$ARROW_DOWN", sold.toString())
     }
+
+    //////////////////////////////////
     // MANUTENÇÃO
+    //////////////////////////////////
+
+    /**
+     * Loop principal do modo de manutenção. Mostra um "slideshow" com as
+     * opções disponíveis (#, A, B, C, D) e despacha para a função
+     * correspondente consoante a tecla premida. Sai automaticamente do
+     * modo de manutenção quando Maintenance.stilMaintenance() deixa de ser true.
+     * Sem parâmetros. Sem retorno (Unit) — é um loop infinito que só
+     * termina através de `return` para outra função de navegação.
+     */
+
     fun idleMaintenance() {
         val slides = listOf("# - Print Ticket", "A - Station Cnt.", "B - Coins Cnt.", "C - Reset Cnt.", "D - Shutdown")
         var slideIdx = -1
@@ -93,6 +139,13 @@ object APP {
     }
 
     // 1º CASO - PRINT TICKET TEST
+
+    /**
+     * Sub-menu de manutenção para navegar entre estações e testar a impressão de um bilhete (sem envolver moedas/pagamento).
+     * Sem parâmetros. Sem retorno
+     * devolve o controlo a idleMaintenance() por timeout (TUI.NONE) ou a purchaseTest() quando '#' é premido.
+     */
+
     fun browseTest() {
         var idx = 0
         while (true) {
@@ -120,6 +173,13 @@ object APP {
         }
     }
 
+    /**
+     * Ecrã de confirmação de teste de impressão para a estação indicada.
+     * @param idx Índice da estação selecionada.
+     * Sem retorno — chama processTicketTest() ao confirmar ('*') ou
+     * cancela e volta ao ecrã inicial ('#').
+     */
+
     fun purchaseTest(idx: Int) {
         while (true) {
             TUI.writeCentered(0, Stations.getName(idx))
@@ -134,11 +194,24 @@ object APP {
 
         }
     }
+
+    /**
+     * Mostra a mensagem de "Vending Aborted" durante 5 segundos.
+     * Sem parâmetros. Sem retorno; efeito lateral: pausa a execução (Time.sleep).
+     */
     fun vendingAbortedTest() {
         TUI.clear()
         TUI.writeCentered(0, "Vending Aborted")
-        Time.sleep(5000)
+        Time.sleep(5000) // bloqueia 5s para o utilizador ler a mensagem
     }
+
+    /**
+     * Executa o teste de impressão de bilhete (sem pagamento real) para
+     * a estação indicada e aguarda a recolha do bilhete pelo utilizador.
+     * @param idx Índice da estação.
+     * @param roundTrip true = bilhete ida e volta, false = só ida.
+     * Sem retorno — no fim reencaminha sempre para idleMaintenance().
+     */
     fun processTicketTest(idx: Int, roundTrip: Boolean) {
         TicketDispenser.activatePrintingTicket(roundTrip, 6, idx)
         TUI.clear()
@@ -153,23 +226,31 @@ object APP {
 
         idleMaintenance()
     }
+
     // 2º CASO - VER A QUANTIDADE DE BILHETES VENDIDOS
+    /**
+     * Sub-menu de manutenção que permite navegar pelas estações e ver
+     * quantos bilhetes foram vendidos em cada uma.
+     * Sem parâmetros. Sem retorno — volta a idleMaintenance() por
+     * timeout ou ao premir '#'.
+     */
     fun browseStationsM() {
         var idx = 0
         while (true) {
             val key = TUI.readKey(5000)
-            if (key == TUI.NONE ) return idleMaintenance()
+            if (key == TUI.NONE) return idleMaintenance()
 
+            //
             when (key) {
                 in '1'..'9' -> {
                     val digit = key!! - '0'
                     idx = if (idx == digit) {
-                        val next = digit + 9
+                        val next = digit + 9  // para se clicar duas vezes na tecla ir para a cidade correspondente dessa tecla (após os primeiros 9 idx)
                         if (next < Stations.count()) next else digit
                     } else digit
                     browseMaintenance(idx, Stations.getName(idx), Stations.getSold(idx))
-
                 }
+                // recua 1 posição; soma Stations.count() antes do % para evitar índices negativos
                 'A' -> { idx = (idx - 1 + Stations.count()) % Stations.count()
                     browseMaintenance(idx, Stations.getName(idx), Stations.getSold(idx)) }
                 'B' -> { idx = (idx + 1) % Stations.count()
@@ -178,12 +259,19 @@ object APP {
             }
         }
     }
-    // 3º CASO - VER A QUANTIDADE DE MOEDAS VENDIDOS
+
+    // 3º CASO - VER A QUANTIDADE DE MOEDAS DEPOSITADAS
+    /**
+     * Sub-menu de manutenção que permite navegar pelos tipos de moeda e
+     * ver a quantidade depositada de cada um.
+     * Sem parâmetros. Sem retorno — volta a idleMaintenance() por
+     * timeout ou ao premir '#'.
+     */
     fun browsecoinsM() {
         var idx = 0
         while (true) {
             val key = TUI.readKey(5000)
-            if (key == TUI.NONE ) return idleMaintenance()
+            if (key == TUI.NONE) return idleMaintenance()
 
             when (key) {
                 in '1'..'9' -> {
@@ -197,8 +285,8 @@ object APP {
                         CoinDeposit.getCoinType(idx).toString(),
                         CoinDeposit.getAmmount(idx)
                     )
-
                 }
+
                 'A' -> { idx = (idx - 1 + CoinDeposit.countCoin()) % CoinDeposit.countCoin()
                     browseMaintenance(
                         idx,
@@ -217,66 +305,96 @@ object APP {
             }
         }
     }
+
     // 4º CASO - DAR RESET NOS CONTADORES
+    /**
+     * Pede confirmação e, se aceite, faz reset a todos os contadores; coloca  as stations e as coins a 0
+     * (estações vendidas e moedas depositadas) e persiste o novo estado.
+     * Sem parâmetros. Sem retorno — volta sempre a idleMaintenance().
+     */
     fun resetcounters() {
         TUI.clear()
-        TUI.writeCentered(0," Reset Counters")
-        TUI.writeSides(1,"*- Yes", "Other- No")
+        TUI.writeCentered(0, " Reset Counters")
+        TUI.writeSides(1, "*- Yes", "Other- No")
         while (true) {
             val key = TUI.readKey(5000)
             TUI.clear()
             if (key == TUI.NONE) return idleMaintenance()
             if (key == '*') {
+                // Confirmado: reset + persistência dos dados em ficheiro
                 TUI.clear()
-                TUI.writeCentered(0," Resetting Cont.")
+                TUI.writeCentered(0, " Resetting Cont.")
                 Time.sleep(2000)
                 Stations.resetCounters()
                 CoinDeposit.resetCounter()
                 Stations.saveStations()
                 CoinDeposit.saveCoins()
                 return idleMaintenance()
-            } else if (key in '1'..'9'|| key in 'A'..'D') {idleMaintenance()}
+            } else if (key in '1'..'9' || key in 'A'..'D') { idleMaintenance() } // qualquer outra tecla = "No"
         }
     }
-    // 4º CASO - DAR SHUTDOWN NA MACHINE
+
+    // 4º CASO (nota original) - DAR SHUTDOWN À MÁQUINA
+    /**
+     * Pede confirmação e, se aceite, desliga (bloqueia) a máquina.
+     * Sem parâmetros. Sem retorno — em caso de confirmação entra num
+     * loop infinito de "desligado" (bloqueia a execução).
+     * simular o estado "desligado" e nunca mais sai .
+     */
     fun shutdown() {
         TUI.clear()
-        TUI.writeCentered(0,"Shutdown")
-        TUI.writeSides(1,"*- Yes", "Other- No")
+        TUI.writeCentered(0, "Shutdown")
+        TUI.writeSides(1, "*- Yes", "Other- No")
         while (true) {
             val key = TUI.readKey(5000)
             if (key == TUI.NONE) return idleMaintenance()
             if (key == '*') {
                 TUI.clear()
-                TUI.writeCentered(0,"Shutdowning")
+                TUI.writeCentered(0, "Shutdowning")
                 Time.sleep(2000)
-                while (true) TUI.clear()
-            } else if (key in '1'..'9'|| key in 'A'..'D') {idleMaintenance()}
+                while (true) TUI.clear() // estado terminal: máquina "desligada"
+            } else if (key in '1'..'9' || key in 'A'..'D') { idleMaintenance() }
         }
-
     }
 
+    // ============================================================
+    // FUNÇÕES DA APP (fluxo normal de venda)
+    // ============================================================
 
-    // FUNÇÕES NA APP
+    /**
+     * Ecrã inicial (idle) da máquina: mostra título, data e hora, e
+     * fica à espera de uma tecla para iniciar a navegação nas estações.
+     * Também verifica continuamente se deve entrar em modo de manutenção.
+     * Sem parâmetros. Sem retorno — despacha para browseStations()
+     * assim que uma tecla é premida.
+     */
     fun idleDisplay() {
         TUI.clear()
-        TUI.writemenuHome("TICKET TO RIDE", getDate(), getTime())   // escreve UMA vez
+
         while (true) {
-            Maintenance.startmaintenance()
+            TUI.writemenuHome("TICKET TO RIDE", getDate(), getTime())   // escreve UMA vez
+            Maintenance.startmaintenance() // verifica trigger de entrada em manutenção
             val key = TUI.getKey()                        // espera tecla (bloqueia até timeout)
             if (key != TUI.NONE) browseStations()                  // houve tecla -> deixa o browseStations correr
         }
     }
 
+    /**
+     * Permite navegar entre as estações disponíveis (setas A/B e dígitos
+     * 1-9) e iniciar o processo de compra ao premir '#' (só se a estação
+     * tiver preço definido, i.e. != 0).
+     * Sem parâmetros. Sem retorno — volta a idleDisplay() por timeout.
+     */
     fun browseStations() {
         var idx = 0
         while (true) {
             val key = TUI.readKey(5000)
-            if (key == TUI.NONE ) return idleDisplay()
+            if (key == TUI.NONE) return idleDisplay()
 
             when (key) {
                 in '1'..'9' -> {
-                    if (idx== 0 && countS==0) {
+                    // 1ª tecla numérica é "Lisboa"
+                    if (idx == 0 && countS == 0) {
                         TUI.clear()
                         showStation(idx)
                         countS++
@@ -296,7 +414,7 @@ object APP {
                 'B' -> { idx = (idx + 1) % Stations.count()
                     TUI.clear()
                     showStation(idx) }
-                '#' -> if ( Stations.getPrice(idx) != 0 ){
+                '#' -> if (Stations.getPrice(idx) != 0) { // estação inválida/sem preço não pode ser comprada
                     TUI.clear()
                     purchase(idx)
                 }
@@ -304,6 +422,14 @@ object APP {
         }
     }
 
+    /**
+     * Fluxo de compra: aceita moedas inseridas até perfazer o preço da
+     * estação (simples ou ida-e-volta, alternável com '*'), atualizando
+     * o LCD com o valor em falta. Cancela com '#'.
+     * @param idx Índice da estação a comprar.
+     * Sem retorno — avança para processTicket() quando o valor inserido
+     * é suficiente, ou para vendingAborted()+idleDisplay() se cancelado.
+     */
     fun purchase(idx: Int) {
         var roundTrip = false
         var lastRemaining = -1          // estado anterior (fora do loop)
@@ -312,18 +438,19 @@ object APP {
         while (true) {
             val price = if (roundTrip) Stations.getPrice(idx) * 2 else Stations.getPrice(idx)
 
-            // entrou moeda? -> lê e confirma o handshake
+            // entrou moeda? -> lê e confirma o handshake com o hardware
             if (CoinAcceptor.checkCoin()) {
                 CoinAcceptor.readCoin()
                 CoinAcceptor.coinAccept()
             }
 
-            val inserted  = CoinAcceptor.inserted_coins.sum()
+            val inserted = CoinAcceptor.inserted_coins.sum()
             val remaining = price - inserted
 
+            // Se inserio o preço do bilhete, começa a precossar o bilhete
             if (inserted >= price) return processTicket(idx, roundTrip, inserted)
 
-            // só reescreve o LCD se algo mudou (evita flicker)
+            // só reescreve o LCD se algo mudou (evita flicker no display)
             if (remaining != lastRemaining || roundTrip != lastRoundTrip) {
                 val tipo = if (roundTrip) "$ARROW_UP$ARROW_DOWN" else "$ARROW_UP"
                 TUI.clear()
@@ -334,13 +461,19 @@ object APP {
 
             val key = TUI.readKey(100)
             when (key) {
-                '*' -> roundTrip = !roundTrip
-                '#' -> { vendingAborted(inserted); return idleDisplay() }
+                '*' -> roundTrip = !roundTrip // alterna entre bilhete simples / ida-e-volta
+                '#' -> { vendingAborted(inserted); return idleDisplay() } // cancela e devolve moedas
             }
         }
     }
 
-    fun vendingAborted(remaining : Int) {
+    /**
+     * Cancela a compra em curso: ejeta as moedas inseridas, persiste o
+     * estado dos depósitos e informa o utilizador do valor devolvido.
+     * @param remaining Valor (em cêntimos) a devolver/mostrar ao utilizador.
+     * Sem retorno; efeito lateral: ejeção física de moedas + pausa 5s.
+     */
+    fun vendingAborted(remaining: Int) {
         CoinAcceptor.eject()
         CoinDeposit.saveCoins()
         TUI.clear()
@@ -348,11 +481,22 @@ object APP {
         TUI.writeCentered(1, "returned  ${formatPrice(remaining)}$EURO")
         Time.sleep(5000)
     }
-    fun processTicket(idx: Int, roundTrip: Boolean, price : Int) {
+
+    /**
+     * Finaliza uma compra bem sucedida: regista o dinheiro recebido,
+     * imprime o bilhete, aguarda a sua recolha e atualiza os contadores
+     * de vendas da estação, persistindo tudo em ficheiro.
+     * @param idx Índice da estação comprada.
+     * @param roundTrip true = ida e volta, false = só ida.
+     * @param price Valor total (em cêntimos) efetivamente recebido/cobrado.
+     * Sem retorno — no fim volta sempre a idleDisplay().
+     */
+    fun processTicket(idx: Int, roundTrip: Boolean, price: Int) {
         TUI.clear()
         TUI.writeCentered(0, Stations.getName(idx))
         TUI.writeCentered(1, "Processing...")
 
+        // Regista o dinheiro: junta as moedas ao depósito e persiste
         CoinAcceptor.collect()
         CoinDeposit.addCoin(price)
         CoinDeposit.saveCoins()
@@ -363,7 +507,9 @@ object APP {
         TUI.writeCentered(0, Stations.getName(idx))
         TUI.writeCentered(1, "Collect Ticket")
 
-        TicketDispenser.waitTicket()
+        TicketDispenser.waitTicket() // bloqueia até o bilhete ser retirado
+
+        // Atualiza e persiste as estatísticas de venda da estação
         Stations.sellTicket(idx)
         Stations.saveStations()
 
@@ -372,9 +518,14 @@ object APP {
         Time.sleep(5000)
         idleDisplay()
     }
-
 }
 
+/**
+ * Ponto de entrada da aplicação.
+ * Inicializa os módulos e entra num loop infinito que alterna entre
+ * o modo de manutenção e o modo normal de venda, consoante o estado
+ * devolvido por Maintenance.stilMaintenance().
+ */
 fun main() {
     APP.init()
     while (true) {
