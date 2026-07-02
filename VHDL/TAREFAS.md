@@ -1,0 +1,136 @@
+# Ticket Machine — G7 LEIC21D
+
+- # Classificação Final (20 valores)
+	- # AV Média Final (6 valores)
+		12,07 (3,6/6 valores da nota final)
+		- ## AVI (3 valores)
+			13,25/20
+		- ## AVII (3 valores)
+			10,89/20
+	- # Defesa Final (14 valores)
+		?/14
+	
+- #  hardware
+	- ## Ticket Machine (top-level)
+	    - [x] **VHDL — 0% (1,5)**
+	    - [ ] PINS — 50% (0,5)
+		- ### Keyboard Reader
+			- [x] vhdl — 0% (0,5)
+			- [ ] tb — 0% (0,5)
+		    - #### Key Decode
+			    - [x] vhdl — 100% (0,5)
+			    - [x] TB — 70% (0,7)
+		        - counter
+		            - [x] vhdl — 100%(0,25)
+		            - [x] tb — 80% (0,25)
+		        - decoder
+		            - [x] vhdl — 80% (0,25)
+		            - [x] tb — 90% (0,25)
+		        - mux / penc
+		            - [x] vhdl — 100% (0,25)
+		            - [x] tb — 90% (0,25)
+		        - key scan
+					- [ ] **nova versão !!**
+		            - [x] vhdl — 100% (1,0)
+		            - [x] tb — 90% (0,9)
+		        - key control
+		            - [x] **ASM — 40% (1,5)**
+					- [ ] **TDelay/Permitir Key Repeat!!**
+		            - [x] vhdl — 100% (1,0)
+		            - [x] TB — 100% (1,0)
+		    - #### RingBuffer
+			    - [x] VHDL — 95% (0,5)
+			    - [x] TB — 90% (0,25)
+		        - full / empty
+		            - [x] vhdl — 80% (0,25)
+		            - [ ] tb — 50% (0,25)
+		        - MAC
+		            - [x] VHDL — 90% (0,75)
+		            - [x] TB — 75% (0,25)
+		            - [ ] diagrama de blocos MAC — 0% (0,25)
+		        - RING Buffer Control
+		            - [ ] **ASM — 65% (1,0)**
+		            - [x] VHDL — 85% (0,5)
+		            - [x] TB — 75% (0,25)
+		    - #### KeyTransmitter
+			    - [x] VHDL — 90% (0,5)
+			    - [ ] TB — 0% (0,25)
+		        - register
+		            - [x] VHDL — 100% (0,5)
+		            - [ ] TB — 0% (0,25)
+		        - TX. Control
+		            - [ ] **ASM — 70% (1,0)**
+		            - [x] VHDL — 80% (0,25)
+		            - [x] TB — 0% (0,25)
+		- ### PE LCD
+			- [x] vhdl — 95% (0,25)
+			- [ ] tb — 0%(0,25)
+		    - #### Serial Receiver
+			    - [x] vhdl — 95% (0,5)
+			    - [x] tb — 100% (0,25)
+		        - shift-register
+		            - [ ] **vhdl — 50% (0,5)**
+		            - [x] tb — 100% (0,5)
+		        - hold-register
+		            - [x] vhdl — 100% (0,25)
+		            - [x] tb — 100% (0,25)
+		- ### PE TD (Ticket Dispenser)
+			- [x] VHDL — 95% (0,5)
+			- [ ] TB — 0% (0,15)
+		    - #### Serial Receiver
+		        - shift-register
+		            - [ ] VHDL — 50% (0,25)
+		            - [x] TB — 100% (0,10)
+		        - hold register
+		            - [x] VHDL — 100% (0,25)
+		            - [x] TB — 100% (0,10)
+# software
+- [x] HAL — 93% (1,0)
+	- [ ] tb
+- [ ] **KBD — 50% (1,0)**
+	- [ ] tb
+- [x] Serial Emitter — 81% (1,0)
+	- [ ] tb
+- [x] LCD — 94% (1,5)
+	- [ ] tb
+- [x] Ticket Dispenser — 75% (0,5)
+	- [ ] tb
+- [x] Coin Acceptor — 75% (0,5)
+	- [ ] tb
+- [ ] **TUI — 50% (1,5)**
+	- [ ] tb
+- [ ] **App — 65% (2,0)**
+	- [ ] tb
+- [ ] **CoinDeposit.kt**
+	- [ ] `data class Coin(value, qty)`, buffer durante compra, cofre, persistência `CoinDeposit.txt` (`VALUE;NUMBER_COINS`)
+	- [ ] tb
+- [ ] **Stations.kt**
+	- [x] contador de bilhetes por estação, persistência (`PRICE;SOLD_TICKETS;STATION_NAME`)
+	- [ ] tb
+- [ ] **FileAccess.kt** (leitura/escrita de ficheiros para CoinDeposit e Stations)
+	- [ ] tb
+	- [ ] criar ficheiros de dados
+		- [x] `CoinDeposit.txt` + Stations.txt
+- [ ] **Modo Manutenção** (chave M, I6=0x40)
+	- [ ] Tb
+	- [ ] Funcoes
+		- [ ] Consulta Bilhetes
+		- [ ] Consulta Moedas
+		- [ ] Iniciar contadores
+		- [ ] Desligar (grava ficheiros)
+- [ ] Others
+# Relatórios
+- ## AV
+	- ### AVI
+		- [ ] moduloKeyboardReader_LEIC21D-G07.pdf — 0% (1,5)
+		- [ ] moduloPortExpanderLCD_LEIC21D-G07.pdf — 0% (1,5)
+	- ### AVII
+		- [ ] moduloKeyboardReader_LEIC21D-G07.pdf — 50% (1,5)
+		- [ ] moduloPortExpanderLCD_LEIC21D-G07.pdf — ?% (?)
+		- [ ] moduloPortExpander_TD_LEIC21D-G07.pdf — 40% (1,0)
+- ## AV FINAL
+	- [ ] **TicketMachine_LEIC21D-G07.pdf - % (?)**
+	- [ ] **moduloKeyboardReader_LEIC21D-G07.pdf — % (?)**
+	- [ ] **moduloPortExpanderLCD_LEIC21D-G07.pdf — % (?)**
+	- [ ] **moduloPortExpander_TD_LEIC21D-G07.pdf — % (?)**
+
