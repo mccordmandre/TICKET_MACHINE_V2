@@ -345,9 +345,9 @@ object APP {
         }
     }
 
-    // ============================================================
-    // FUNÇÕES DA APP (fluxo normal de venda)
-    // ============================================================
+    // 
+    // FUNÇÕES DA APP 
+    // 
 
     /**
      * Ecrã inicial (idle) da máquina: mostra título, data e hora, e
@@ -358,9 +358,8 @@ object APP {
      */
     fun idleDisplay() {
         TUI.clear()
-
+        TUI.writemenuHome("TICKET TO RIDE", getDate(), getTime())
         while (true) {
-            TUI.writemenuHome("TICKET TO RIDE", getDate(), getTime())   // escreve UMA vez
             Maintenance.startmaintenance() // verifica trigger de entrada em manutenção
             val key = TUI.getKey()                        // espera tecla (bloqueia até timeout)
             if (key != TUI.NONE) browseStations()                  // houve tecla -> deixa o browseStations correr
@@ -461,7 +460,7 @@ object APP {
      * @param remaining Valor (em cêntimos) a devolver/mostrar ao utilizador.
      * Sem retorno; efeito lateral: ejeção física de moedas + pausa 5s.
      */
-    
+
     fun vendingAborted(remaining: Int) {
         CoinAcceptor.eject()
         CoinDeposit.saveCoins()
@@ -518,11 +517,8 @@ object APP {
 fun main() {
     APP.init()
     while (true) {
-        if (Maintenance.stilMaintenance())
-            APP.idleMaintenance()
-        else {
             APP.idleDisplay()
             APP.browseStations()
         }
     }
-}
+
