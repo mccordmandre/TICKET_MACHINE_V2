@@ -49,6 +49,7 @@ object APP {
      * @return String no formato "euros.cêntimos" (ex: "1.55").
      */
     fun formatPrice(cents: Int): String { //155 -> 1.55
+        // pad start garante que tem pelo meso 2 carateres prenchendo o resto com 0
         return "${cents / 100}.${(cents % 100).toString().padStart(2, '0')}"
     }
 
@@ -58,7 +59,7 @@ object APP {
      * @param idx Índice da estação a mostrar (0-based).
      * Sem retorno; efeito lateral: escreve no LCD via TUI.
      */
-    fun showStation(idx: Int) {
+    fun showStation(idx: Int) { // escrever o nome da funcao no meio , depois  indice cm as setas e depos o preço
         TUI.writemenuHome(Stations.getName(idx), "$idx$ARROW_UP$ARROW_DOWN", "${formatPrice(Stations.getPrice(idx))}$EURO")
     }
 
@@ -71,6 +72,7 @@ object APP {
      * Sem retorno; efeito lateral: escreve no LCD via TUI.
      */
     fun browseMaintenance(idx: Int, nome : String, sold : Int ) {
+        // o o mesmo que o show stations no entanto para a manutencao
         TUI.clear()
         TUI.writemenuHome(nome, "$idx$ARROW_UP$ARROW_DOWN", sold.toString())
     }
@@ -92,7 +94,7 @@ object APP {
         // lista de opções mostradas em "slideshow" no ecrã de manutenção
         val slides = listOf("# - Print Ticket", "A - Station Cnt.", "B - Coins Cnt.", "C - Reset Cnt.", "D - Shutdown")
         var slideIdx = 0 // arranca sempre no 1º slide ("# - Print Ticket")
-        var lastSlideTime = Time.getTimeInMillis()
+        var lastSlideTime = Time.getTimeInMillis() // tempo
         val SLIDE_INTERVAL = 2000
 
         TUI.clear()
@@ -105,22 +107,25 @@ object APP {
             if (Maintenance.stilMaintenance()) {
 
                 //se passou o tempo suficiente desde a última troca? -> avança para o próximo slide
+                // passou 1000, o tempo que está o slide é 500 , 1000-500 é menor que 2000 entao nao muda o slideshow
                 if (Time.getTimeInMillis() - lastSlideTime >= SLIDE_INTERVAL) {
+                    // fazemos "% slides.size " para não teremos indices negativos
                     slideIdx = (slideIdx + 1) % slides.size // avança circularmente pela lista de slides
-                    lastSlideTime = Time.getTimeInMillis() // reinicia o cronómetro
+                    lastSlideTime = Time.getTimeInMillis() // reinicia o cronómetro do slide
                     TUI.clear()
                     TUI.writeCentered(0, "Maintenance")
                     TUI.writeLeftSide(1, slides[slideIdx]) // redesenha o novo slide
                 }
                 val key = TUI.getKey()
+                // se alguma tecla foi premida ele vai avançar para cada modulo
                 when (key) {
-                    '#' -> {  showStation(0); browseTest() }
-                    'A' -> { browseMaintenance(0, Stations.getName(0), Stations.getSold(0)); browseStationsM()}
-                    'B' -> {browseMaintenance(0,CoinDeposit.getCoinType(0).toString(),CoinDeposit.getAmmount(0)); browsecoinsM() }
-                    'C' -> { resetcounters()}
-                    'D' -> { shutdown()}
+                    '#' -> {  showStation(0); browseTest() } // compra e venda da manutenção
+                    'A' -> { browseMaintenance(0, Stations.getName(0), Stations.getSold(0)); browseStationsM()} // ver as estações
+                    'B' -> {browseMaintenance(0,CoinDeposit.getCoinType(0).toString(),CoinDeposit.getAmmount(0)); browsecoinsM() } // ver as moedas
+                    'C' -> { resetcounters()} // resetar os contadores
+                    'D' -> { shutdown()} // desligar
                 }
-            } else idleDisplay()
+            } else idleDisplay() // se o cliente desprimir a tecla da manutenção, volta para o idle normal
         }
     }
 
@@ -136,15 +141,19 @@ object APP {
         var idx = 0
         while (true) {
             val key = TUI.readKey(5000)
-            if (key == TUI.NONE ) return idleMaintenance()
-
+            if (key == TUI.NONE ) return idleMaintenance() // se nao pressionou nd em 5 segundos volta ao idle
+// quando um tecla for premida
             when (key) {
-                in '1'..'9' -> {
+                in '1'..'9' -> { // e estiver neste intervalo, ou seja as teclas de numeros do kbd
+                    //como key é do tipo char, fazemos isto para key ser do tipo int para ele ser o nosso idx da lista das stations
                     val digit = key!! - '0'
-                    idx = if (idx == digit) {
+                    // vamos ter o valor real do idx, pq podemos ter pressionado 2 vezes e o idx novo tem de ser o valor corresondeste a esse idx
+                    // mas para a lista depois da tecla 9
+                    // se for a segunda vez a premir a mesma tecla avança, ou seja de idx( indice anterir) for igual a digit ( valor anterior)
+                    idx = if (idx == digit) { //
                         // se tiveremos a clicar pela segunda vez na tecla interpreta-se como pedido para ir para a estação que nao se enquadra do primeiros 9 idx
                         val next = digit + 9
-                        if (next < Stations.count()) next else digit
+                        if (next < Stations.count()) next else digit // só avança para 'next' se existir essa estação na lista
                     } else digit
                     TUI.clear()
                     showStation(idx)
@@ -153,7 +162,7 @@ object APP {
                 'A' -> { idx = (idx - 1 + Stations.count()) % Stations.count()
                     TUI.clear()
                     showStation(idx) }
-                'B' -> { idx = (idx + 1) % Stations.count()
+                'B' -> { idx = (idx + 1) % Stations.count() % Stations.count()
                     TUI.clear()
                     showStation(idx) }
                 '#' -> purchaseTest(idx)
@@ -173,11 +182,13 @@ object APP {
             TUI.writeCentered(0, Stations.getName(idx))
             TUI.writeLeftSide(1,"$ARROW_UP *- to Print")
             val key = TUI.readKey(100)
+            // se clicar no '*' vais imprimir o bilhete
+            // se clilcar no '#' vai abortar a venda e volta para o idle
             when (key) {
                 '*' -> {processTicketTest(idx,roundTrip = true)}
                 '#' -> {
                     vendingAbortedTest()
-                    return idleDisplay() }
+                    return idleMaintenance() }
             }
 
         }
@@ -187,6 +198,7 @@ object APP {
      * Mostra a mensagem de "Vending Aborted" durante 5 segundos.
      * Sem parâmetros. Sem retorno; efeito lateral: pausa a execução (Time.sleep).
      */
+    // como na manutenção nao estamos a trabalhar com moedas apenas diz que a venda foi abordada e volta para idle
     fun vendingAbortedTest() {
         TUI.clear()
         TUI.writeCentered(0, "Vending Aborted")
@@ -200,17 +212,21 @@ object APP {
      * @param roundTrip true = bilhete ida e volta, false = só ida.
      * Sem retorno — no fim reencaminha sempre para idleMaintenance().
      */
+
     fun processTicketTest(idx: Int, roundTrip: Boolean) {
+        //vai realizar o bilhete com o destino e a origem
         TicketDispenser.activatePrintingTicket(roundTrip, 6, idx)
         TUI.clear()
+        // escrever a estação que o cliente escolheu
         TUI.writeCentered(0, Stations.getName(idx))
         TUI.writeCentered(1, "Collect Ticket")
-
+        // esperar o cliente recolha o bilhete
         TicketDispenser.waitTicket()
 
         TUI.writeCentered(0, "Thank you!")
         TUI.writeCentered(1, "Have a nice trip")
         Time.sleep(2000)
+        // voltar ao main
 
         idleMaintenance()
     }
@@ -236,6 +252,7 @@ object APP {
                         val next = digit + 9  // para se clicar duas vezes na tecla ir para a cidade correspondente dessa tecla (após os primeiros 9 idx)
                         if (next < Stations.count()) next else digit
                     } else digit
+                    // vamos fazer a pesqusa de estações mas no entanto com as quatidades de bilhetes vendidas
                     browseMaintenance(idx, Stations.getName(idx), Stations.getSold(idx))
                 }
                 // recua 1 posição; soma Stations.count() antes do % para evitar índices negativos
@@ -268,6 +285,8 @@ object APP {
                         val next = digit + 9
                         if (next < CoinDeposit.countCoin()) next else digit
                     } else digit
+                    // mesmo que as estações mas com as moedas, ou seja as moedas que temos no cofre
+                    // e com o po de moeda, ou seja o valor, ex: 0,01€
                     browseMaintenance(
                         idx,
                         CoinDeposit.getCoinType(idx).toString(),
@@ -313,9 +332,9 @@ object APP {
                 TUI.clear()
                 TUI.writeCentered(0, " Resetting Cont.")
                 Time.sleep(2000)
-                Stations.resetCounters()
+                Stations.resetCounters()// reset
                 CoinDeposit.resetCounter()
-                Stations.saveStations()
+                Stations.saveStations()// atualiza os ficheiro txt
                 CoinDeposit.saveCoins()
                 return idleMaintenance()
             } else if (key in '1'..'9' || key in 'A'..'D') { idleMaintenance() } // qualquer outra tecla = "No"
@@ -338,16 +357,16 @@ object APP {
             if (key == TUI.NONE) return idleMaintenance()
             if (key == '*') {
                 TUI.clear()
-                TUI.writeCentered(0, "Shutdowning")
+                TUI.writeCentered(0, "Shutting down")
                 Time.sleep(2000)
                 while (true) TUI.clear() // estado terminal: máquina "desligada"
             } else if (key in '1'..'9' || key in 'A'..'D') { idleMaintenance() }
         }
     }
 
-    // 
-    // FUNÇÕES DA APP 
-    // 
+    //
+    // FUNÇÕES DA APP
+    //
 
     /**
      * Ecrã inicial (idle) da máquina: mostra título, data e hora, e
