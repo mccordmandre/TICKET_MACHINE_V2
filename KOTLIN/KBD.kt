@@ -21,9 +21,10 @@ object KBD {
 
     // Inicia a classe
     fun init() {
-        keymask
+        //keymask
     }
 
+    // lê directamente do KeyDecode sem passar pelo RingBuffer nem o KeyTransmitter
     private fun getKeyParallel() : Char{
         var character = NONE.toChar()
         // enquanto kval = 1 lê o indice se for i != 0
@@ -43,23 +44,39 @@ object KBD {
     private fun getKeySerial(): Char {
         var character = NONE.toChar()
         var bits = 0
+
+        // TXd=1 -> não há start, nada a ler
+        // if (HAL.isBit(RXDMASK)) return NONE.toChar()
+
         // TXD desceu há dados para ler
         if (!HAL.isBit(RXDMASK)) {
+            //manda os rising edge para key transmitter enviar serial
             for (i in 0 until 7) {
+                // rise do clock
                 HAL.setBits(TXCLKMASK)
                 if (i in 1..4) {
+                    // escreve o bits todos
                     if (HAL.isBit(RXDMASK)) {
                         bits = bits or (1 shl (i - 1))
                     }
                 }
+                //se TXD nr 5 for 1 em vez de 0 da erro pq foge ao protocolo do key transmit
+                if(i == 5 && HAL.isBit(RXDMASK)){
+                    HAL.clrBits(TXCLKMASK)
+                    return NONE.toChar()
+                }
+                // mesma coisa só que a 0 no bit 6
+                if(i == 6 && !HAL.isBit(RXDMASK)){
+                    HAL.clrBits(TXCLKMASK)
+                    return NONE.toChar()
+                }
+                // lowering do clock no fim do protocolo
                 HAL.clrBits(TXCLKMASK)
             }
             character = teclado[bits]
         }
         return character
     }
-
-
 
     // Retorna de imediato a tecla premida ou NONE se nao ha tecla premida
     fun getKey(): Char {
@@ -99,3 +116,23 @@ fun main() {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
