@@ -76,6 +76,18 @@ Repara: I5 não é usado. E o mesmo valor de máscara (ex. `0x10`) significa coi
 
 **3. Imprimir.** Crédito suficiente → `collect` (moedas para o cofre) → `TicketDispenser` monta a trama e envia → `PE_TD` recebe → `TICKET_DISPENSER` mostra nos HEX e gera `Fn`(I4) → `waitTicket` completa o handshake → `Stations.sellTicket` conta e grava.
 
+❓ **QF1.** Quando carregas numa tecla, quantos blocos de **hardware** ela atravessa antes de chegar ao `KBD` (software)?
+> Três: **Key Decode** (deteta) → **Ring Buffer** (guarda) → **Key Transmitter** (envia em série). Só depois é que o `KBD` a lê pelo `TXd`.
+
+❓ **QF2.** Na fase de pagamento, porque é que o loop **não pode bloquear** à espera de uma tecla?
+> Porque tem de ir **vendo as moedas ao mesmo tempo** que espera as teclas (`*`/`#`). Se bloqueasse em `readKey`, não detetava moedas durante esse tempo. Por isso usa `readKey(100)` (timeout curto) e faz polling do moedeiro a cada volta.
+
+❓ **QF3.** Assim que há crédito suficiente, o que acontece primeiro: recolher as moedas ou mandar imprimir?
+> Primeiro **`collect`** (recolhe as moedas ao cofre e persiste), só depois `activatePrintingTicket`. Faz sentido: a venda só se confirma quando o dinheiro está garantido.
+
+❓ **QF4.** Onde é que o crédito inserido "vive" durante a compra, antes de ir para o cofre?
+> Numa lista temporária no `CoinAcceptor` (`inserted_coins`), somada pela `App` a cada moeda. Só passa ao `CoinDeposit` (cofre) no `collect`, ou é devolvido no `eject` se cancelares.
+
 ---
 
 ## Paragem 1 — UsbPort (a fronteira)
@@ -90,6 +102,15 @@ END UsbPort;
 
 ❓ **Q3.** Porque é que se chama `inputPort` se é o hardware que o preenche?
 > Os nomes são do ponto de vista do **software**: "input" = o que o software recebe/lê. O hardware é que o alimenta.
+
+❓ **Q3a.** A que está ligado o **I5**?
+> A **nada** — é o único bit de entrada não usado. As entradas necessárias são `cid` (I0-2), `coin` (I3), `Fn` (I4), `M` (I6) e `TXd` (I7); sobrou o I5. O mapeamento é o definido pela simul do prof, que deixou o I5 livre. (Não há nenhuma razão funcional para ser o I5 em concreto — foi só o que não foi preciso.)
+
+❓ **Q3b.** Se precisasses de mais um sinal do hardware para o software (ex.: um botão extra), que pino usarias?
+> O **I5**, por ser o único de entrada que está livre. Terias de o ligar no top-level (`usb_in(5) <= ...`) e ler no software com `HAL.isBit(0x20)`.
+
+❓ **Q3c.** Podia o `TXclk` (que o software gera) estar numa **entrada** em vez de numa saída?
+> Não. O `TXclk` é o relógio que o **software gera** para o Key Transmitter — logo tem de ser uma **saída** (O7). As entradas são só o que o hardware põe para o software ler.
 
 ---
 
@@ -141,6 +162,25 @@ Kval  <= '1' when CurrentState = STATE_REGISTERING else '0';
 ❓ **Q6 (bug real).** Na placa, cada tecla saía com o código **+1** e repetia-se sozinha. Porquê e como resolveram?
 > O contador avançava um passo a mais antes de congelar: ao detetar `Kpress`, a FSM transita no flanco seguinte, mas o contador (com `CE=Kscan`) ainda contava nesse flanco → parava no índice seguinte (o +1). E em WAITING_RELEASE lia a coluna errada → auto-repeat. **Correção:** `f_ce <= Kscan and f_mux` (para no mesmo ciclo em que deteta a tecla). Um bug, dois sintomas.
 
+### Perguntas sobre o Key Control
+
+❓ **Q6a.** Descreve as 3 transições da FSM do Key Control.
+> **SCANNING → REGISTERING** quando `Kack='0' and Kpress='1'` (detetou tecla e o consumidor ainda não confirmou). **REGISTERING → WAITING_RELEASE** quando `Kack='1'` (o consumidor leu o código). **WAITING_RELEASE → SCANNING** quando `Kpress='0'` (a tecla foi largada).
+
+❓ **Q6b.** Para que serve o estado **WAITING_RELEASE**? O que aconteceria sem ele?
+> Garante **um código por pressão**: só volta a varrer quando a tecla é largada. Sem ele, enquanto segurasses a tecla, a FSM voltava logo a SCANNING e registava a mesma tecla vezes sem conta (auto-repeat indesejado).
+
+❓ **Q6c.** Porque é que o `Kscan` está a 1 só em SCANNING (e alimenta o `CE` do contador)?
+> Para o contador **só varrer** enquanto procura tecla. Assim que deteta (`Kpress`), sai de SCANNING → `Kscan=0` → o contador para e o código fica congelado durante o registo.
+
+### Perguntas sobre a Versão III (Key Scan) do relatório
+
+❓ **Q6d.** Como funciona a **Versão III** do Key Scan e porque é melhor que a Versão I (a vossa)?
+> A Versão III usa um **priority encoder (PENC)** que lê as **4 linhas de uma coluna ao mesmo tempo** e codifica logo qual está premida (`Y1Y0`), com o `GS` (group select) a indicar "há tecla premida". Só precisa de varrer **4 colunas** (em vez de percorrer as 16 combinações linha×coluna uma a uma), e o `Kpress` sai direto do `GS` sem o AND final. É mais rápida e mais limpa.
+
+❓ **Q6e.** Na Versão I, quantos ciclos de clock são precisos para percorrer o teclado todo? E na Versão III?
+> Versão I: **16** (um por cada combinação linha/coluna, já que o contador é de 4 bits). Versão III: **4** (só as colunas — o PENC resolve a linha em paralelo). É a razão de a III ser considerada melhoria no vosso "Trabalho Futuro".
+
 ---
 
 ## Paragem 4 — Ring Buffer (FIFO de 16) + detalhe
@@ -168,6 +208,23 @@ U3 : RAM        port map (address=>MA_RAM, wr=>F_Wr, din=>D, dout=>Q);
 
 ❓ **Q8 (bug real).** O buffer lia em ciclo infinito — nunca dava `Empty`. Porquê?
 > O `Mini_Control` recebia o `putget` **atrasado 1 ciclo** (por um registo), mas o `selPG=1` só dura o `ST_Read` (1 ciclo). Com leituras rápidas, o `putget=1` chegava tarde e a condição `ST_MID→ST_EMPTY` nunca disparava. **Correção:** ligar o `putget` **direto** ao `Mini_Control` (tirar o registo de atraso).
+
+### Perguntas sobre o Mini_Control (gera Full/Empty)
+
+❓ **Q8a.** Descreve a FSM do `Mini_Control` (estados e transições).
+> 3 estados: **ST_EMPTY**, **ST_MID**, **ST_FULL**. **EMPTY → MID** quando os ponteiros deixam de ser iguais (escreveste algo). **MID → FULL** se voltam a igualar E a última operação foi **escrita**. **MID → EMPTY** se voltam a igualar E a última foi **leitura**. **FULL → MID** quando deixam de ser iguais (leste algo). `Empty=1` só em EMPTY; `Full=1` só em FULL.
+
+❓ **Q8b.** Que dois sinais entram no `Mini_Control` e o que representam?
+> O **`equal`** (do comparador `Equal`): os dois ponteiros PUT e GET estão na mesma posição? E o **`putget`**: qual foi a última operação (escrita ou leitura). Juntos desfazem a ambiguidade do `PUT==GET`.
+
+❓ **Q8c.** Porque é que o `Full` só interessa à escrita e o `Empty` só à leitura?
+> Não faz sentido **escrever** quando está cheio (esmagarias uma tecla ainda não lida) → o RB_Control só escreve se `Full=0`. Não faz sentido **ler** quando está vazio (não há nada) → só lê se `Empty=0`.
+
+❓ **Q8d.** O que é o `Equal` e o que faria se, em vez de igualdade, precisasses de saber **quantos** elementos há no buffer?
+> O `Equal` é um comparador de 4 bits (`1` se PUT==GET). Para saber a **quantidade** não bastariam os estados EMPTY/MID/FULL — precisarias de **subtrair** os dois ponteiros (`PUT − GET`, com módulo 16), o que exigiria um subtrator, não só um comparador.
+
+❓ **Q8e.** Para que serve o `Wreg` (que vai para o `Load` do Key Transmitter)?
+> É o sinal de **entrega ao consumidor**: quando o Ring Buffer lê uma palavra (`ST_Read`), põe-na em `Q` e ativa `Wreg`, que chega ao `Load` do Key Transmitter e o faz registar a palavra a transmitir. O par simétrico é o `DAC` (no Write), que avisa o produtor que a tecla foi aceite.
 
 ---
 
